@@ -8,6 +8,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: output-branch-deployment
+  cancel-in-progress: false
+
 jobs:
   generate:
     permissions:
