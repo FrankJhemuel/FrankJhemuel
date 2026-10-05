@@ -1,4 +1,5 @@
-name: Generate pacman animation
+```yaml
+name: Generate Snake and Pacman animations
 
 on:
   schedule:
@@ -7,6 +8,10 @@ on:
   push:
     branches:
       - main
+
+concurrency:
+  group: output-branch-deployment
+  cancel-in-progress: false
 
 jobs:
   generate:
@@ -20,21 +25,33 @@ jobs:
         with:
           fetch-depth: 1
 
+      # Generate Snake animation
+      - name: Generate snake animation
+        uses: Platane/snk@v3
+        with:
+          github_user_name: ${{ github.repository_owner }}
+          outputs: |
+            dist/snake.svg
+            dist/snake-dark.svg?palette=github-dark
+
+      # Generate Pacman animation
       - uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: generate pacman-contribution-graph.svg
+      - name: Generate pacman contribution graph
         uses: abozanona/pacman-contribution-graph@main
         with:
           github_user_name: ${{ github.repository_owner }}
         env:
           NODE_OPTIONS: --max-old-space-size=8192
 
-      - name: push pacman-contribution-graph.svg to output branch
+      # Deploy both animations together
+      - name: Push animations to output branch
         uses: crazy-max/ghaction-github-pages@v3
         with:
           target_branch: output
           build_dir: dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
