@@ -20,21 +20,19 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Generate Snake animation
       - name: Generate snake animation
         uses: Platane/snk@v3
         with:
           github_user_name: ${{ github.repository_owner }}
           outputs: |
-            dist/snake.svg
-            dist/snake-dark.svg?palette=github-dark
+            snake/snake.svg
+            snake/snake-dark.svg?palette=github-dark
 
-      # Generate Pacman animation
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
@@ -45,8 +43,14 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=8192
 
-      # Deploy both animations together
-      - name: Push animations to output branch
+      - name: Prepare deployment directory
+        run: |
+          mkdir -p dist
+          cp snake/snake.svg dist/snake.svg
+          cp snake/snake-dark.svg dist/snake-dark.svg
+          cp pacman-contribution-graph.svg dist/pacman-contribution-graph.svg
+
+      - name: Deploy animations
         uses: crazy-max/ghaction-github-pages@v3
         with:
           target_branch: output
