@@ -23,7 +23,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Generate Snake into its own directory
+      # Generate Snake in light and dark versions
       - name: Generate snake animation
         uses: Platane/snk@v3
         with:
@@ -32,36 +32,50 @@ jobs:
             snake/snake.svg
             snake/snake-dark.svg?palette=github-dark
 
-      # Remove any dist directory left by Snake
+      # Prepare Pacman output directory
       - name: Prepare Pacman directory
-        run: |
-          rm -rf dist
-          mkdir -p dist
-          chmod 777 dist
+        run: mkdir -p dist
 
-      # Setup Node.js for Pacman
+      # Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
 
-      # Generate Pacman
-      - name: Generate pacman contribution graph
-        uses: abozanona/pacman-contribution-graph@main
-        with:
-          github_user_name: ${{ github.repository_owner }}
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
+      # Install Pacman generator
+      - name: Install Pacman generator
+        run: npm install --global pacman-contribution-graph
 
-      # Combine both animations
+      # Generate light Pacman graph
+      - name: Generate light Pacman graph
+        run: |
+          pacman-contribution-graph \
+            --game pacman \
+            --platform github \
+            --username "${{ github.repository_owner }}" \
+            --gameTheme github \
+            --output dist/pacman-contribution-graph.svg
+
+      # Generate dark Pacman graph
+      - name: Generate dark Pacman graph
+        run: |
+          pacman-contribution-graph \
+            --game pacman \
+            --platform github \
+            --username "${{ github.repository_owner }}" \
+            --gameTheme github-dark \
+            --output dist/pacman-contribution-graph-dark.svg
+
+      # Prepare deployment directory
       - name: Prepare deployment directory
         run: |
           mkdir -p output-dist
           cp snake/snake.svg output-dist/snake.svg
           cp snake/snake-dark.svg output-dist/snake-dark.svg
           cp dist/pacman-contribution-graph.svg output-dist/pacman-contribution-graph.svg
+          cp dist/pacman-contribution-graph-dark.svg output-dist/pacman-contribution-graph-dark.svg
 
-      # Deploy everything together
+      # Deploy all animations
       - name: Deploy animations
         uses: crazy-max/ghaction-github-pages@v3
         with:
